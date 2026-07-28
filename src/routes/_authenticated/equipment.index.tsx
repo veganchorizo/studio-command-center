@@ -181,6 +181,8 @@ function ViewToggle({
   );
 }
 
+const PLURAL: Record<string, string> = { Status: "statuses", Category: "categories", Room: "rooms", Location: "locations", Engineer: "engineers" };
+
 function FilterSelect({
   value,
   onChange,
@@ -198,7 +200,7 @@ function FilterSelect({
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All {label.toLowerCase() === "status" ? "statuses" : `${label.toLowerCase()}s`}</SelectItem>
+        <SelectItem value="all">All {PLURAL[label] ?? `${label.toLowerCase()}s`}</SelectItem>
         {options.map((o) => (
           <SelectItem key={o} value={o}>
             {o}
