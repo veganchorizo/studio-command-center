@@ -27,9 +27,13 @@ import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedArtistsRouteImport } from './routes/_authenticated/artists'
 import { Route as AuthenticatedSessionsIndexRouteImport } from './routes/_authenticated/sessions.index'
+import { Route as AuthenticatedKnowledgeIndexRouteImport } from './routes/_authenticated/knowledge.index'
 import { Route as AuthenticatedEquipmentIndexRouteImport } from './routes/_authenticated/equipment.index'
+import { Route as AuthenticatedAssistantIndexRouteImport } from './routes/_authenticated/assistant.index'
 import { Route as AuthenticatedSessionsSessionIdRouteImport } from './routes/_authenticated/sessions.$sessionId'
+import { Route as AuthenticatedKnowledgeDocIdRouteImport } from './routes/_authenticated/knowledge.$docId'
 import { Route as AuthenticatedEquipmentEquipmentIdRouteImport } from './routes/_authenticated/equipment.$equipmentId'
+import { Route as AuthenticatedAssistantThreadIdRouteImport } from './routes/_authenticated/assistant.$threadId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -122,11 +126,23 @@ const AuthenticatedSessionsIndexRoute =
     path: '/sessions/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedKnowledgeIndexRoute =
+  AuthenticatedKnowledgeIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedKnowledgeRoute,
+  } as any)
 const AuthenticatedEquipmentIndexRoute =
   AuthenticatedEquipmentIndexRouteImport.update({
     id: '/equipment/',
     path: '/equipment/',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAssistantIndexRoute =
+  AuthenticatedAssistantIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAssistantRoute,
   } as any)
 const AuthenticatedSessionsSessionIdRoute =
   AuthenticatedSessionsSessionIdRouteImport.update({
@@ -134,23 +150,35 @@ const AuthenticatedSessionsSessionIdRoute =
     path: '/sessions/$sessionId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedKnowledgeDocIdRoute =
+  AuthenticatedKnowledgeDocIdRouteImport.update({
+    id: '/$docId',
+    path: '/$docId',
+    getParentRoute: () => AuthenticatedKnowledgeRoute,
+  } as any)
 const AuthenticatedEquipmentEquipmentIdRoute =
   AuthenticatedEquipmentEquipmentIdRouteImport.update({
     id: '/equipment/$equipmentId',
     path: '/equipment/$equipmentId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAssistantThreadIdRoute =
+  AuthenticatedAssistantThreadIdRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => AuthenticatedAssistantRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/artists': typeof AuthenticatedArtistsRoute
-  '/assistant': typeof AuthenticatedAssistantRoute
+  '/assistant': typeof AuthenticatedAssistantRouteWithChildren
   '/calendar': typeof AuthenticatedCalendarRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/inventory': typeof AuthenticatedInventoryRoute
-  '/knowledge': typeof AuthenticatedKnowledgeRoute
+  '/knowledge': typeof AuthenticatedKnowledgeRouteWithChildren
   '/maintenance': typeof AuthenticatedMaintenanceRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/patchbay': typeof AuthenticatedPatchbayRoute
@@ -158,21 +186,23 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/assistant/$threadId': typeof AuthenticatedAssistantThreadIdRoute
   '/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
+  '/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/assistant/': typeof AuthenticatedAssistantIndexRoute
   '/equipment/': typeof AuthenticatedEquipmentIndexRoute
+  '/knowledge/': typeof AuthenticatedKnowledgeIndexRoute
   '/sessions/': typeof AuthenticatedSessionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/artists': typeof AuthenticatedArtistsRoute
-  '/assistant': typeof AuthenticatedAssistantRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/inventory': typeof AuthenticatedInventoryRoute
-  '/knowledge': typeof AuthenticatedKnowledgeRoute
   '/maintenance': typeof AuthenticatedMaintenanceRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/patchbay': typeof AuthenticatedPatchbayRoute
@@ -180,9 +210,13 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/assistant/$threadId': typeof AuthenticatedAssistantThreadIdRoute
   '/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
+  '/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/assistant': typeof AuthenticatedAssistantIndexRoute
   '/equipment': typeof AuthenticatedEquipmentIndexRoute
+  '/knowledge': typeof AuthenticatedKnowledgeIndexRoute
   '/sessions': typeof AuthenticatedSessionsIndexRoute
 }
 export interface FileRoutesById {
@@ -190,13 +224,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/artists': typeof AuthenticatedArtistsRoute
-  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRouteWithChildren
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
-  '/_authenticated/knowledge': typeof AuthenticatedKnowledgeRoute
+  '/_authenticated/knowledge': typeof AuthenticatedKnowledgeRouteWithChildren
   '/_authenticated/maintenance': typeof AuthenticatedMaintenanceRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/patchbay': typeof AuthenticatedPatchbayRoute
@@ -204,9 +238,13 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/training': typeof AuthenticatedTrainingRoute
+  '/_authenticated/assistant/$threadId': typeof AuthenticatedAssistantThreadIdRoute
   '/_authenticated/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
+  '/_authenticated/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
   '/_authenticated/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/_authenticated/assistant/': typeof AuthenticatedAssistantIndexRoute
   '/_authenticated/equipment/': typeof AuthenticatedEquipmentIndexRoute
+  '/_authenticated/knowledge/': typeof AuthenticatedKnowledgeIndexRoute
   '/_authenticated/sessions/': typeof AuthenticatedSessionsIndexRoute
 }
 export interface FileRouteTypes {
@@ -228,21 +266,23 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/training'
+    | '/assistant/$threadId'
     | '/equipment/$equipmentId'
+    | '/knowledge/$docId'
     | '/sessions/$sessionId'
+    | '/assistant/'
     | '/equipment/'
+    | '/knowledge/'
     | '/sessions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/artists'
-    | '/assistant'
     | '/calendar'
     | '/clients'
     | '/dashboard'
     | '/finance'
     | '/inventory'
-    | '/knowledge'
     | '/maintenance'
     | '/marketing'
     | '/patchbay'
@@ -250,9 +290,13 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/training'
+    | '/assistant/$threadId'
     | '/equipment/$equipmentId'
+    | '/knowledge/$docId'
     | '/sessions/$sessionId'
+    | '/assistant'
     | '/equipment'
+    | '/knowledge'
     | '/sessions'
   id:
     | '__root__'
@@ -273,9 +317,13 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/tasks'
     | '/_authenticated/training'
+    | '/_authenticated/assistant/$threadId'
     | '/_authenticated/equipment/$equipmentId'
+    | '/_authenticated/knowledge/$docId'
     | '/_authenticated/sessions/$sessionId'
+    | '/_authenticated/assistant/'
     | '/_authenticated/equipment/'
+    | '/_authenticated/knowledge/'
     | '/_authenticated/sessions/'
   fileRoutesById: FileRoutesById
 }
@@ -412,12 +460,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSessionsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/knowledge/': {
+      id: '/_authenticated/knowledge/'
+      path: '/'
+      fullPath: '/knowledge/'
+      preLoaderRoute: typeof AuthenticatedKnowledgeIndexRouteImport
+      parentRoute: typeof AuthenticatedKnowledgeRoute
+    }
     '/_authenticated/equipment/': {
       id: '/_authenticated/equipment/'
       path: '/equipment'
       fullPath: '/equipment/'
       preLoaderRoute: typeof AuthenticatedEquipmentIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/assistant/': {
+      id: '/_authenticated/assistant/'
+      path: '/'
+      fullPath: '/assistant/'
+      preLoaderRoute: typeof AuthenticatedAssistantIndexRouteImport
+      parentRoute: typeof AuthenticatedAssistantRoute
     }
     '/_authenticated/sessions/$sessionId': {
       id: '/_authenticated/sessions/$sessionId'
@@ -426,6 +488,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSessionsSessionIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/knowledge/$docId': {
+      id: '/_authenticated/knowledge/$docId'
+      path: '/$docId'
+      fullPath: '/knowledge/$docId'
+      preLoaderRoute: typeof AuthenticatedKnowledgeDocIdRouteImport
+      parentRoute: typeof AuthenticatedKnowledgeRoute
+    }
     '/_authenticated/equipment/$equipmentId': {
       id: '/_authenticated/equipment/$equipmentId'
       path: '/equipment/$equipmentId'
@@ -433,18 +502,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEquipmentEquipmentIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/assistant/$threadId': {
+      id: '/_authenticated/assistant/$threadId'
+      path: '/$threadId'
+      fullPath: '/assistant/$threadId'
+      preLoaderRoute: typeof AuthenticatedAssistantThreadIdRouteImport
+      parentRoute: typeof AuthenticatedAssistantRoute
+    }
   }
 }
 
+interface AuthenticatedAssistantRouteChildren {
+  AuthenticatedAssistantThreadIdRoute: typeof AuthenticatedAssistantThreadIdRoute
+  AuthenticatedAssistantIndexRoute: typeof AuthenticatedAssistantIndexRoute
+}
+
+const AuthenticatedAssistantRouteChildren: AuthenticatedAssistantRouteChildren =
+  {
+    AuthenticatedAssistantThreadIdRoute: AuthenticatedAssistantThreadIdRoute,
+    AuthenticatedAssistantIndexRoute: AuthenticatedAssistantIndexRoute,
+  }
+
+const AuthenticatedAssistantRouteWithChildren =
+  AuthenticatedAssistantRoute._addFileChildren(
+    AuthenticatedAssistantRouteChildren,
+  )
+
+interface AuthenticatedKnowledgeRouteChildren {
+  AuthenticatedKnowledgeDocIdRoute: typeof AuthenticatedKnowledgeDocIdRoute
+  AuthenticatedKnowledgeIndexRoute: typeof AuthenticatedKnowledgeIndexRoute
+}
+
+const AuthenticatedKnowledgeRouteChildren: AuthenticatedKnowledgeRouteChildren =
+  {
+    AuthenticatedKnowledgeDocIdRoute: AuthenticatedKnowledgeDocIdRoute,
+    AuthenticatedKnowledgeIndexRoute: AuthenticatedKnowledgeIndexRoute,
+  }
+
+const AuthenticatedKnowledgeRouteWithChildren =
+  AuthenticatedKnowledgeRoute._addFileChildren(
+    AuthenticatedKnowledgeRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedArtistsRoute: typeof AuthenticatedArtistsRoute
-  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRouteWithChildren
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
-  AuthenticatedKnowledgeRoute: typeof AuthenticatedKnowledgeRoute
+  AuthenticatedKnowledgeRoute: typeof AuthenticatedKnowledgeRouteWithChildren
   AuthenticatedMaintenanceRoute: typeof AuthenticatedMaintenanceRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedPatchbayRoute: typeof AuthenticatedPatchbayRoute
@@ -460,13 +568,13 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedArtistsRoute: AuthenticatedArtistsRoute,
-  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRouteWithChildren,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
-  AuthenticatedKnowledgeRoute: AuthenticatedKnowledgeRoute,
+  AuthenticatedKnowledgeRoute: AuthenticatedKnowledgeRouteWithChildren,
   AuthenticatedMaintenanceRoute: AuthenticatedMaintenanceRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedPatchbayRoute: AuthenticatedPatchbayRoute,
