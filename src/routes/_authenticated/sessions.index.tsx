@@ -56,7 +56,7 @@ function SessionsPage() {
       />
 
       <Panel title="Filters" code="SES/FLT" bodyClassName="p-2">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-7">
           <Input
             placeholder="Search title, artist, song…"
             value={filters.q ?? ""}
@@ -76,7 +76,7 @@ function SessionsPage() {
             label="Engineer"
             options={ENGINEERS}
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 lg:col-span-2">
             <Input type="date" value={filters.from ?? ""} onChange={(e) => set({ from: e.target.value })} />
             <Input type="date" value={filters.to ?? ""} onChange={(e) => set({ to: e.target.value })} />
           </div>
