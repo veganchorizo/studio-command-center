@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/studio/AppSidebar";
 import { CommandPalette } from "@/components/studio/CommandPalette";
 import { TopBar } from "@/components/studio/TopBar";
 import { useAuth } from "@/features/auth/store";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -25,6 +26,7 @@ function StudioShell() {
         </main>
       </div>
       <CommandPalette />
+      <Toaster position="bottom-right" />
     </div>
   );
 }
