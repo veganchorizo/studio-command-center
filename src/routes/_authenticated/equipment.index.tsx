@@ -198,7 +198,7 @@ function FilterSelect({
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All {label.toLowerCase()}s</SelectItem>
+        <SelectItem value="all">All {label.toLowerCase() === "status" ? "statuses" : `${label.toLowerCase()}s`}</SelectItem>
         {options.map((o) => (
           <SelectItem key={o} value={o}>
             {o}
