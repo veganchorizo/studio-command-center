@@ -62,7 +62,7 @@ function SignIn() {
           <div>
             <h1 className="text-lg font-semibold tracking-tight">THE STUDIO OS</h1>
             <p className="readout text-[0.6rem] tracking-widest text-muted-foreground">
-              LOCAL AUTHENTICATION / NO EXTERNAL SERVICES
+              {"\n"}
             </p>
           </div>
         </div>
