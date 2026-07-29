@@ -170,17 +170,21 @@ function SettingsPage() {
           </div>
         </Panel>
 
-        <Panel title="Roster" code="ACCESS">
-          <ul className="divide-y divide-border/60">
-            {DEMO_ACCOUNTS.map((a) => (
-              <li key={a.email} className="flex items-center justify-between py-1.5">
-                <span className="text-xs text-foreground">{a.name}</span>
-                <span className="readout text-[0.6rem] text-muted-foreground">
-                  {a.email} · {a.role}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <Panel title="Accounts" code="ACCESS">
+          <div className="space-y-3">
+            <p className="text-[0.65rem] leading-relaxed text-muted-foreground">
+              Accounts and roles live on the studio server and are shared by every machine. Owners
+              manage the roster from the Users module.
+            </p>
+            {atLeast(user, "owner") && (
+              <Button asChild size="sm" variant="secondary" className="h-8">
+                <Link to="/users">
+                  <Users className="size-3.5" /> Manage users
+                </Link>
+              </Button>
+            )}
+            <ChangePassphrase />
+          </div>
         </Panel>
 
         <Panel title="Data" code="STORAGE">
