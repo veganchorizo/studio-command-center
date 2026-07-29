@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/studio/AppSidebar";
 import { CommandPalette } from "@/components/studio/CommandPalette";
+import { LocalImportBanner } from "@/components/studio/LocalImportBanner";
 import { TopBar } from "@/components/studio/TopBar";
 import { bootstrapAuth } from "@/features/auth/store";
 import { useStudioDb } from "@/features/data/store";
