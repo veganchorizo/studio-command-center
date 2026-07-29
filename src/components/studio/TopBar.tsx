@@ -1,7 +1,7 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { LogOut, Search, Command as CommandIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { useAuth } from "@/features/auth/store";
+import { clearAuthCache, useAuth } from "@/features/auth/store";
 import { NAV_MODULES } from "@/lib/nav";
 import { useUi } from "@/lib/ui-store";
 import { useQueryClient } from "@tanstack/react-query";
@@ -42,7 +42,8 @@ export function TopBar() {
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    signOut();
+    await signOut();
+    clearAuthCache();
     navigate({ to: "/", replace: true });
   }
 

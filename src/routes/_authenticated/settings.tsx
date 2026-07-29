@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Download, RotateCcw, Upload } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Download, RotateCcw, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, PageHeader, Panel } from "@/components/studio/Panel";
-import { useAuth, atLeast, DEMO_ACCOUNTS } from "@/features/auth/store";
+import { useAuth, atLeast } from "@/features/auth/store";
+import { changeOwnPasswordFn } from "@/features/auth/auth.functions";
 import { exportData, useStudioDb } from "@/features/data/store";
 import { listModels } from "@/features/assistant/ollama";
 
@@ -33,6 +34,7 @@ function SettingsPage() {
   const importData = useStudioDb((s) => s.importData);
   const user = useAuth((s) => s.user);
   const canWrite = atLeast(user, "engineer");
+  const isOwner = atLeast(user, "owner");
   const fileRef = useRef<HTMLInputElement>(null);
   const [probe, setProbe] = useState<string | null>(null);
   const [probing, setProbing] = useState(false);
@@ -67,10 +69,12 @@ function SettingsPage() {
 
   async function onFile(file: File) {
     try {
-      importData(JSON.parse(await file.text()));
+      await importData(JSON.parse(await file.text()));
       toast.success("Data imported");
-    } catch {
-      toast.error("That file isn't a valid Studio OS backup");
+    } catch (err) {
+      toast.error("Import failed", {
+        description: err instanceof Error ? err.message : "That file isn't a valid backup.",
+      });
     }
   }
 
@@ -79,8 +83,9 @@ function SettingsPage() {
       <PageHeader
         title="Settings"
         code="SYS / CONFIG"
-        subtitle="Everything here is stored in this browser. Nothing leaves the machine."
+        subtitle="Studio records and accounts are stored on this server and shared by everyone signed in."
       />
+
 
       <div className="grid gap-3 lg:grid-cols-2">
         <Panel title="Studio" code="IDENTITY">
@@ -170,17 +175,21 @@ function SettingsPage() {
           </div>
         </Panel>
 
-        <Panel title="Roster" code="ACCESS">
-          <ul className="divide-y divide-border/60">
-            {DEMO_ACCOUNTS.map((a) => (
-              <li key={a.email} className="flex items-center justify-between py-1.5">
-                <span className="text-xs text-foreground">{a.name}</span>
-                <span className="readout text-[0.6rem] text-muted-foreground">
-                  {a.email} · {a.role}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <Panel title="Accounts" code="ACCESS">
+          <div className="space-y-3">
+            <p className="text-[0.65rem] leading-relaxed text-muted-foreground">
+              Accounts and roles live on the studio server and are shared by every machine. Owners
+              manage the roster from the Users module.
+            </p>
+            {atLeast(user, "owner") && (
+              <Button asChild size="sm" variant="secondary" className="h-8">
+                <Link to="/users">
+                  <Users className="size-3.5" /> Manage users
+                </Link>
+              </Button>
+            )}
+            <ChangePassphrase />
+          </div>
         </Panel>
 
         <Panel title="Data" code="STORAGE">
@@ -190,7 +199,7 @@ function SettingsPage() {
               <Button size="sm" variant="secondary" className="h-8" onClick={download}>
                 <Download className="size-3.5" /> Export JSON
               </Button>
-              <Button size="sm" variant="secondary" className="h-8" disabled={!canWrite} onClick={() => fileRef.current?.click()}>
+              <Button size="sm" variant="secondary" className="h-8" disabled={!isOwner} onClick={() => fileRef.current?.click()}>
                 <Upload className="size-3.5" /> Import
               </Button>
               <input
@@ -208,22 +217,76 @@ function SettingsPage() {
                 size="sm"
                 variant="destructive"
                 className="h-8"
-                disabled={!canWrite}
+                disabled={!isOwner}
                 onClick={() => {
-                  resetToSeed();
-                  toast.success("Database reset to seed data");
+                  void resetToSeed()
+                    .then(() => toast.success("Database reset to seed data"))
+                    .catch((err: unknown) =>
+                      toast.error("Reset failed", {
+                        description: err instanceof Error ? err.message : "Server rejected it.",
+                      }),
+                    );
                 }}
               >
                 <RotateCcw className="size-3.5" /> Reset to seed
               </Button>
             </div>
             <p className="text-[0.65rem] leading-relaxed text-muted-foreground">
-              Records persist in this browser under <span className="readout">studio-os/db/v1</span>. Export regularly — clearing
-              site data wipes the studio.
+              Records live on the studio server in{" "}
+              <span className="readout">/data/studio.json</span> inside the mounted volume, shared
+              by everyone signed in. Import and reset overwrite that shared database for all users.
             </p>
           </div>
         </Panel>
       </div>
     </div>
+  );
+}
+
+function ChangePassphrase() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await changeOwnPasswordFn({ data: { current, next } });
+      setCurrent("");
+      setNext("");
+      toast.success("Passphrase updated");
+    } catch (err) {
+      toast.error("Could not update passphrase", {
+        description: err instanceof Error ? err.message : "Try again.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-2 border-t border-border/60 pt-3">
+      <div className="label-console">Change my passphrase</div>
+      <Input
+        type="password"
+        className="h-8 text-xs"
+        placeholder="Current passphrase"
+        autoComplete="current-password"
+        value={current}
+        onChange={(e) => setCurrent(e.target.value)}
+      />
+      <Input
+        type="password"
+        className="h-8 text-xs"
+        placeholder="New passphrase (min 8 characters)"
+        autoComplete="new-password"
+        value={next}
+        onChange={(e) => setNext(e.target.value)}
+      />
+      <Button type="submit" size="sm" variant="secondary" className="h-8" disabled={busy || !current || next.length < 8}>
+        {busy ? "Saving…" : "Update passphrase"}
+      </Button>
+    </form>
   );
 }

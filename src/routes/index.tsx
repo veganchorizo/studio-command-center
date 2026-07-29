@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Radio, ShieldCheck } from "lucide-react";
-import { DEMO_ACCOUNTS, useAuth } from "@/features/auth/store";
+import { bootstrapAuth, useAuth } from "@/features/auth/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,10 +23,10 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && useAuth.getState().user) {
-      throw redirect({ to: "/dashboard" });
-    }
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const user = await bootstrapAuth();
+    if (user) throw redirect({ to: "/dashboard" });
   },
   component: SignIn,
 });
@@ -35,17 +35,20 @@ function SignIn() {
   const signIn = useAuth((s) => s.signIn);
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
-  const [email, setEmail] = useState("admin@studio.local");
-  const [password, setPassword] = useState("studio");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (user) navigate({ to: "/dashboard", replace: true });
   }, [user, navigate]);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const result = signIn(email, password);
+    setBusy(true);
+    const result = await signIn(email, password);
+    setBusy(false);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -97,35 +100,23 @@ function SignIn() {
 
           {error && <p className="text-xs text-destructive">{error}</p>}
 
-          <Button type="submit" className="w-full">
-            Enter the studio
+          <Button type="submit" className="w-full" disabled={busy}>
+            {busy ? "Checking credentials…" : "Enter the studio"}
           </Button>
         </form>
 
         <div className="mt-4 border border-border bg-rail p-3">
           <div className="label-console mb-2 flex items-center gap-1.5">
-            <ShieldCheck className="size-3" /> Local roster
+            <ShieldCheck className="size-3" /> Accounts live on this server
           </div>
-          <ul className="space-y-1">
-            {DEMO_ACCOUNTS.map((a) => (
-              <li key={a.email} className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail(a.email);
-                    setPassword("studio");
-                  }}
-                  className="readout text-[0.65rem] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                >
-                  {a.email}
-                </button>
-                <span className="readout text-[0.6rem] uppercase tracking-widest text-muted-foreground/60">
-                  {a.role}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-[0.65rem] text-muted-foreground/70">Passphrase for every seeded account: studio</p>
+          <p className="text-[0.65rem] leading-relaxed text-muted-foreground/70">
+            Credentials are verified on the studio server and shared by every machine that reaches
+            it. The first owner account is created on first start from{" "}
+            <span className="readout">STUDIO_ADMIN_EMAIL</span> /{" "}
+            <span className="readout">STUDIO_ADMIN_PASSWORD</span> — if you did not set them, the
+            generated passphrase is printed in the container logs. Owners can add everyone else
+            under Users.
+          </p>
         </div>
       </div>
     </main>

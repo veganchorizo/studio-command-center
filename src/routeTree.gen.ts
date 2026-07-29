@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedTrainingRouteImport } from './routes/_authenticated/training'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -45,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedTrainingRoute = AuthenticatedTrainingRouteImport.update({
   id: '/training',
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/assistant/$threadId': typeof AuthenticatedAssistantThreadIdRoute
   '/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
   '/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/assistant/$threadId': typeof AuthenticatedAssistantThreadIdRoute
   '/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
   '/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/training': typeof AuthenticatedTrainingRoute
+  '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/assistant/$threadId': typeof AuthenticatedAssistantThreadIdRoute
   '/_authenticated/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
   '/_authenticated/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/training'
+    | '/users'
     | '/assistant/$threadId'
     | '/equipment/$equipmentId'
     | '/knowledge/$docId'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/training'
+    | '/users'
     | '/assistant/$threadId'
     | '/equipment/$equipmentId'
     | '/knowledge/$docId'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/tasks'
     | '/_authenticated/training'
+    | '/_authenticated/users'
     | '/_authenticated/assistant/$threadId'
     | '/_authenticated/equipment/$equipmentId'
     | '/_authenticated/knowledge/$docId'
@@ -372,6 +384,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/training': {
       id: '/_authenticated/training'
@@ -600,6 +619,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedTrainingRoute: typeof AuthenticatedTrainingRoute
+  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedEquipmentEquipmentIdRoute: typeof AuthenticatedEquipmentEquipmentIdRoute
   AuthenticatedSessionsSessionIdRoute: typeof AuthenticatedSessionsSessionIdRoute
   AuthenticatedEquipmentIndexRoute: typeof AuthenticatedEquipmentIndexRoute
@@ -623,6 +643,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedTrainingRoute: AuthenticatedTrainingRoute,
+  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedEquipmentEquipmentIdRoute:
     AuthenticatedEquipmentEquipmentIdRoute,
   AuthenticatedSessionsSessionIdRoute: AuthenticatedSessionsSessionIdRoute,

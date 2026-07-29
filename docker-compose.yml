@@ -7,6 +7,19 @@ services:
     environment:
       # Points at YOUR existing Ollama container on the shared network below.
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      # First-run owner account. Set these BEFORE the first start; afterwards
+      # manage everyone from the Users module inside the app.
+      STUDIO_ADMIN_EMAIL: ${STUDIO_ADMIN_EMAIL:-admin@studio.local}
+      STUDIO_ADMIN_PASSWORD: ${STUDIO_ADMIN_PASSWORD:-}
+      STUDIO_ADMIN_NAME: ${STUDIO_ADMIN_NAME:-Studio Owner}
+      # Optional: 32+ char string that encrypts session cookies. Left unset, a
+      # key is generated into the data volume on first start.
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      # Set to "true" only when serving the app over HTTPS.
+      STUDIO_SECURE_COOKIES: ${STUDIO_SECURE_COOKIES:-false}
+    volumes:
+      # Accounts + the shared studio database. Back this up.
+      - studio-data:/data
     restart: unless-stopped
     networks:
       - ollama-net
@@ -16,6 +29,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+volumes:
+  studio-data:
 
 networks:
   # The network your Ollama container already runs on.
