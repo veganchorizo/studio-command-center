@@ -69,10 +69,12 @@ function SettingsPage() {
 
   async function onFile(file: File) {
     try {
-      importData(JSON.parse(await file.text()));
+      await importData(JSON.parse(await file.text()));
       toast.success("Data imported");
-    } catch {
-      toast.error("That file isn't a valid Studio OS backup");
+    } catch (err) {
+      toast.error("Import failed", {
+        description: err instanceof Error ? err.message : "That file isn't a valid backup.",
+      });
     }
   }
 
@@ -81,8 +83,9 @@ function SettingsPage() {
       <PageHeader
         title="Settings"
         code="SYS / CONFIG"
-        subtitle="Everything here is stored in this browser. Nothing leaves the machine."
+        subtitle="Studio records and accounts are stored on this server and shared by everyone signed in."
       />
+
 
       <div className="grid gap-3 lg:grid-cols-2">
         <Panel title="Studio" code="IDENTITY">
