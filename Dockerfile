@@ -20,11 +20,15 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
 ENV OLLAMA_URL=http://ollama:11434
+# Accounts, sessions and every studio record live here — mount a volume on it.
+ENV STUDIO_DATA_DIR=/data
 
 COPY --from=builder /app/.output ./.output
 
-RUN addgroup -S studio && adduser -S studio -G studio && chown -R studio:studio /app
+RUN addgroup -S studio && adduser -S studio -G studio \
+  && mkdir -p /data && chown -R studio:studio /app /data
 USER studio
 
+VOLUME ["/data"]
 EXPOSE 3000
 CMD ["node", ".output/server/index.mjs"]
