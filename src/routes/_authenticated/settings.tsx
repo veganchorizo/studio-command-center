@@ -195,7 +195,7 @@ function SettingsPage() {
               <Button size="sm" variant="secondary" className="h-8" onClick={download}>
                 <Download className="size-3.5" /> Export JSON
               </Button>
-              <Button size="sm" variant="secondary" className="h-8" disabled={!canWrite} onClick={() => fileRef.current?.click()}>
+              <Button size="sm" variant="secondary" className="h-8" disabled={!isOwner} onClick={() => fileRef.current?.click()}>
                 <Upload className="size-3.5" /> Import
               </Button>
               <input
@@ -213,22 +213,76 @@ function SettingsPage() {
                 size="sm"
                 variant="destructive"
                 className="h-8"
-                disabled={!canWrite}
+                disabled={!isOwner}
                 onClick={() => {
-                  resetToSeed();
-                  toast.success("Database reset to seed data");
+                  void resetToSeed()
+                    .then(() => toast.success("Database reset to seed data"))
+                    .catch((err: unknown) =>
+                      toast.error("Reset failed", {
+                        description: err instanceof Error ? err.message : "Server rejected it.",
+                      }),
+                    );
                 }}
               >
                 <RotateCcw className="size-3.5" /> Reset to seed
               </Button>
             </div>
             <p className="text-[0.65rem] leading-relaxed text-muted-foreground">
-              Records persist in this browser under <span className="readout">studio-os/db/v1</span>. Export regularly — clearing
-              site data wipes the studio.
+              Records live on the studio server in{" "}
+              <span className="readout">/data/studio.json</span> inside the mounted volume, shared
+              by everyone signed in. Import and reset overwrite that shared database for all users.
             </p>
           </div>
         </Panel>
       </div>
     </div>
+  );
+}
+
+function ChangePassphrase() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await changeOwnPasswordFn({ data: { current, next } });
+      setCurrent("");
+      setNext("");
+      toast.success("Passphrase updated");
+    } catch (err) {
+      toast.error("Could not update passphrase", {
+        description: err instanceof Error ? err.message : "Try again.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-2 border-t border-border/60 pt-3">
+      <div className="label-console">Change my passphrase</div>
+      <Input
+        type="password"
+        className="h-8 text-xs"
+        placeholder="Current passphrase"
+        autoComplete="current-password"
+        value={current}
+        onChange={(e) => setCurrent(e.target.value)}
+      />
+      <Input
+        type="password"
+        className="h-8 text-xs"
+        placeholder="New passphrase (min 8 characters)"
+        autoComplete="new-password"
+        value={next}
+        onChange={(e) => setNext(e.target.value)}
+      />
+      <Button type="submit" size="sm" variant="secondary" className="h-8" disabled={busy || !current || next.length < 8}>
+        {busy ? "Saving…" : "Update passphrase"}
+      </Button>
+    </form>
   );
 }
