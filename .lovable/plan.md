@@ -1,57 +1,45 @@
 ## Goal
 
-`docker compose up` pulls a prebuilt image from GHCR and the Studio OS runs at `http://localhost:8080`, talking to the **Ollama container you already run on that server** — no second Ollama, no cloud services.
+Move both **accounts** and **studio data** off the browser and onto the Studio OS server, so every machine that hits the same container sees the same records and the same logins. Passwords stored as salted hashes, sessions in an encrypted HTTP-only cookie, and an owner-only **Users** screen for creating accounts and assigning roles. Still 100% local — no cloud, no external service.
 
-## Tying into your existing Ollama
+## How you'd use it
 
-Today the AI Assistant calls Ollama **from the browser** using a URL saved in Settings (`localStorage`), which means it needs `OLLAMA_ORIGINS="*"` and a host-reachable port. In a container setup that's fragile, so the plan adds a **server-side proxy**:
+1. On first boot the container creates one owner account from `STUDIO_ADMIN_EMAIL` / `STUDIO_ADMIN_PASSWORD` in your `.env` (a random password is generated and printed to the container log if you don't set one).
+2. Sign in as that owner → **Settings → Users** (new sidebar entry, owner-only).
+3. Add account: name, email, role (owner / engineer / assistant / intern), initial password. Edit a row to change role, rename, reset password, or deactivate.
+4. Anyone on your network signs in against that server and works on the same shared sessions, equipment, archive and knowledge base.
 
-- New server route `src/routes/api/ollama/$.ts` that forwards `GET/POST` to `process.env.OLLAMA_URL` (default `http://ollama:11434`), streaming responses through unchanged.
-- `src/features/assistant/ollama.ts` default base URL becomes `/api/ollama`; the Settings field stays, so you can still point directly at a host URL if you prefer.
-- Result: no CORS config needed on your Ollama, the target is set by an env var at runtime (not baked into the image), and the browser never needs direct network access to Ollama.
+## Part 1 — Accounts
 
-Compose joins your existing Ollama's network instead of creating one:
+**Storage** — a JSON file at `/data/users.json` in the container, on a named Docker volume so accounts survive image updates.
 
-```yaml
-services:
-  studio-os:
-    image: ghcr.io/<owner>/<repo>:latest
-    ports: ["8080:3000"]
-    environment:
-      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
-    restart: unless-stopped
-    networks: [ollama-net]
+**Password security** — Node's built-in `scrypt` with a per-user random salt (no new dependencies). Only `salt` + `hash` are stored, comparison is timing-safe, and the browser never receives a hash.
 
-networks:
-  ollama-net:
-    external: true
-    name: ${OLLAMA_NETWORK:-ollama_default}
-```
+**Sessions** — TanStack Start's `useSession` encrypted cookie (HTTP-only, `sameSite: lax`), keyed off `SESSION_SECRET`, auto-generated into `/data/session.key` on first boot if unset. Sign-in, sign-out and "who am I" run as server functions; CSRF middleware is already in place.
 
-A committed `.env.example` documents the three knobs:
-- `OLLAMA_NETWORK` — the Docker network your Ollama container is already on (`docker network ls` to find it).
-- `OLLAMA_URL` — `http://<ollama-container-name>:11434`.
-- Alternative if Ollama runs on the host rather than in Docker: drop the external network and use `OLLAMA_URL=http://host.docker.internal:11434` with `extra_hosts: ["host.docker.internal:host-gateway"]` (both variants documented).
+**Roles** — role names and the `atLeast` / `hasAnyRole` helpers are unchanged, so every module's existing `writeRole` gating keeps working. Every server function re-checks the caller's role server-side, so a tampered client can't create accounts or write data it shouldn't.
 
-## The rest of the Dockerization
+**Users module** — `/users` route (owner-only, hidden for other roles) in the existing `Panel`/table styling: accounts list with role, status and last sign-in; add/edit dialog; delete with confirm; guard against removing or demoting the last owner. The seeded demo roster and the "Local roster" panel on the sign-in page are removed.
 
-### 1. Build for a Node server
-The project currently builds for a Cloudflare/edge target, which can't run in a plain container. Switch the nitro preset to `node-server` in `vite.config.ts`, add a `start` script running `node .output/server/index.mjs`.
+## Part 2 — Shared studio data
 
-### 2. `Dockerfile` (multi-stage)
-- `builder`: `oven/bun`, install with frozen lockfile, `bun run build`.
-- `runner`: `node:22-alpine`, non-root user, copy only `.output/`, `ENV PORT=3000 HOST=0.0.0.0`, `EXPOSE 3000`, `CMD ["node", ".output/server/index.mjs"]`.
-- `.dockerignore` for `node_modules`, `.output`, `.git`, `.lovable`, logs.
+**Storage** — the whole `StudioData` document (sessions, artists, equipment, patchbay, maintenance, inventory, clients, projects, marketing, finance, tasks, training, knowledge docs, audio/video archive, assistant threads, settings) moves to `/data/studio.json` on the same volume. Writes are serialised and atomic (write temp file → rename) so two people saving at once can't corrupt it, with a rolling backup copy kept alongside.
 
-### 3. GitHub Actions → GHCR
-`.github/workflows/docker-publish.yml`: build and push on pushes to main and on tags, `linux/amd64` + `linux/arm64`, auth via the built-in `GITHUB_TOKEN`, tags `latest` + SHA + semver. Public image so `compose up` needs no login.
+**Access** — three server functions: `loadStudio` (read, any signed-in user), `applyMutation` (create/update/delete one record, role-checked per collection), and `replaceStudio` (used by the Import and Reset-to-seed buttons, owner-only).
 
-### 4. README
-Quick start, how to find your Ollama network/container name, the host-Ollama fallback, and a note that app data lives in browser `localStorage` (nothing to mount yet).
+**Client store** — `src/features/data/store.ts` keeps the same public API (`useStudioDb`, `add`, `update`, `remove`, `patchSettings`…), so no module or component changes. Internally it hydrates from the server instead of localStorage, and each mutation posts to the server then reconciles. The whole app is behind a short loading state on first paint instead of reading localStorage.
+
+**Freshness** — the store polls the server for changes every few seconds while the tab is focused and refetches on window focus, so two people on different machines converge quickly without needing websockets. Last write wins per record; conflicting simultaneous edits to the same row are not merged.
+
+**Migration** — on first sign-in the app detects existing localStorage data and offers a one-click "Push this browser's data to the server" prompt (only when the server store is still empty), so nothing you've entered so far is lost. Export/Import JSON in Settings keeps working, now against the server file.
+
+## Docker
+
+`docker-compose.yml` gains a named `studio-data` volume mounted at `/data` plus the new env vars; the Dockerfile creates `/data` owned by the `studio` user. `.env.example` and `README.md` get first-run instructions and a note on backing up the volume.
 
 ## Technical notes
-- Only functional code change is the proxy route + default base URL; existing direct-URL behaviour still works via Settings.
-- Streaming must be preserved through the proxy — I'll verify a real token stream, not just a 200.
-- No Postgres/pgvector service: app state is client-side today. Easy to add when a real backend lands.
-- Multi-arch roughly doubles CI time; say the word and I'll drop arm64.
+
+- New files: `src/features/auth/users.server.ts` (scrypt + user file store), `src/features/auth/session.server.ts`, `src/features/auth/auth.functions.ts`, `src/features/auth/admin.functions.ts`, `src/features/data/studio.server.ts` (atomic JSON store), `src/features/data/studio.functions.ts`, `src/routes/_authenticated/users.tsx`.
+- Route gating in `_authenticated` switches from a client-only Zustand check to session hydration; `ssr: false` stays, so the shell layout is untouched.
+- Env: `STUDIO_DATA_DIR` (default `/data`), `STUDIO_ADMIN_EMAIL`, `STUDIO_ADMIN_PASSWORD`, `SESSION_SECRET` (optional).
+- Trade-off worth knowing: a JSON file on a volume is right for a single studio server and a handful of concurrent users. If you later want many concurrent writers or full history, the same server-function boundary can be repointed at Postgres without touching any UI code.
