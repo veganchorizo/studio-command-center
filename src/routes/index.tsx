@@ -23,10 +23,10 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && useAuth.getState().user) {
-      throw redirect({ to: "/dashboard" });
-    }
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const user = await bootstrapAuth();
+    if (user) throw redirect({ to: "/dashboard" });
   },
   component: SignIn,
 });
@@ -35,17 +35,20 @@ function SignIn() {
   const signIn = useAuth((s) => s.signIn);
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
-  const [email, setEmail] = useState("admin@studio.local");
-  const [password, setPassword] = useState("studio");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (user) navigate({ to: "/dashboard", replace: true });
   }, [user, navigate]);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const result = signIn(email, password);
+    setBusy(true);
+    const result = await signIn(email, password);
+    setBusy(false);
     if (!result.ok) {
       setError(result.error);
       return;
