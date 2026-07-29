@@ -220,15 +220,15 @@ function SettingsPage() {
                 disabled={!isOwner}
                 onClick={() => {
                   void resetToSeed()
-                    .then(() => toast.success("Database reset to seed data"))
+                    .then(() => toast.success("Database cleared"))
                     .catch((err: unknown) =>
-                      toast.error("Reset failed", {
+                      toast.error("Clear failed", {
                         description: err instanceof Error ? err.message : "Server rejected it.",
                       }),
                     );
                 }}
               >
-                <RotateCcw className="size-3.5" /> Reset to seed
+                <RotateCcw className="size-3.5" /> Clear all data
               </Button>
             </div>
             <p className="text-[0.65rem] leading-relaxed text-muted-foreground">
