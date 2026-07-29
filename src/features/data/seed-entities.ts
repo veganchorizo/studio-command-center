@@ -374,3 +374,12 @@ export const DEFAULT_SETTINGS: StudioSettings = {
   ollamaModel: "llama3.1",
   retrievalDepth: 6,
 };
+
+/** The archive starts empty — entries are added by hand or imported from CSV. */
+export function seedAudioArchives(): AudioArchive[] {
+  return [];
+}
+
+export function seedVideoArchives(): VideoArchive[] {
+  return [];
+}

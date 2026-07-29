@@ -145,3 +145,24 @@ export type StudioSettings = {
   ollamaModel: string;
   retrievalDepth: number;
 };
+
+export type AudioArchive = {
+  id: string;
+  title: string;
+  artist: string;
+  date: string;
+  format: string;
+  primaryDrive: string;
+  archiveDrive: string;
+  notes: string;
+};
+
+export type VideoArchive = {
+  id: string;
+  title: string;
+  mediaType: string;
+  showDate: string;
+  primaryDrive: string;
+  archiveDrive: string;
+  notes: string;
+};
