@@ -1,108 +1,68 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { meFn, signInFn, signOutFn } from "./auth.functions";
+import { atLeast, hasAnyRole, hasRole, ROLES, type Role, type StudioUser } from "./roles";
 
-export const ROLES = ["owner", "engineer", "assistant", "intern"] as const;
-export type Role = (typeof ROLES)[number];
-
-export type StudioUser = {
-  id: string;
-  email: string;
-  name: string;
-  initials: string;
-  role: Role;
-};
+export { ROLES, atLeast, hasAnyRole, hasRole };
+export type { Role, StudioUser };
 
 /**
- * Local-only auth. Passwords are checked against a seeded local roster — this
- * is the UI contract a real auth backend will slot into, not real security.
+ * Session-backed auth. Credentials are checked on the server against the
+ * hashed roster in the container's data volume; the browser only ever holds
+ * the public user record returned by the session cookie.
  */
-const ROSTER: Array<StudioUser & { password: string }> = [
-  {
-    id: "USR-1",
-    email: "admin@studio.local",
-    password: "studio",
-    name: "D. Marchetti",
-    initials: "DM",
-    role: "owner",
-  },
-  {
-    id: "USR-2",
-    email: "engineer@studio.local",
-    password: "studio",
-    name: "S. Okafor",
-    initials: "SO",
-    role: "engineer",
-  },
-  {
-    id: "USR-3",
-    email: "assistant@studio.local",
-    password: "studio",
-    name: "P. Nowak",
-    initials: "PN",
-    role: "assistant",
-  },
-  {
-    id: "USR-4",
-    email: "intern@studio.local",
-    password: "studio",
-    name: "C. Ellis",
-    initials: "CE",
-    role: "intern",
-  },
-];
-
 type AuthState = {
   user: StudioUser | null;
   hydrated: boolean;
-  signIn: (email: string, password: string) => { ok: true } | { ok: false; error: string };
-  signOut: () => void;
+  setUser: (user: StudioUser | null) => void;
+  signIn: (email: string, password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  signOut: () => Promise<void>;
 };
 
-export const useAuth = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      hydrated: false,
-      signIn: (email, password) => {
-        const match = ROSTER.find(
-          (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password,
-        );
-        if (!match) return { ok: false as const, error: "No local account matches those credentials." };
-        const { password: _pw, ...user } = match;
-        set({ user });
-        return { ok: true as const };
-      },
-      signOut: () => set({ user: null }),
-    }),
-    {
-      name: "studio-os:auth",
-      partialize: (s: AuthState) => ({ user: s.user }) as unknown as AuthState,
-      onRehydrateStorage: () => () => {
-        useAuth.setState({ hydrated: true });
-      },
-    },
-  ),
-);
+export const useAuth = create<AuthState>()((set) => ({
+  user: null,
+  hydrated: false,
+  setUser: (user) => set({ user, hydrated: true }),
+  signIn: async (email, password) => {
+    try {
+      const result = await signInFn({ data: { email, password } });
+      if (!result.ok) return { ok: false as const, error: result.error };
+      set({ user: result.user, hydrated: true });
+      return { ok: true as const };
+    } catch (err) {
+      return {
+        ok: false as const,
+        error: err instanceof Error ? err.message : "Could not reach the studio server.",
+      };
+    }
+  },
+  signOut: async () => {
+    try {
+      await signOutFn();
+    } finally {
+      set({ user: null, hydrated: true });
+    }
+  },
+}));
 
-// Ensure the flag flips even when nothing was persisted.
-if (typeof window !== "undefined") {
-  useAuth.setState({ hydrated: true });
+let bootstrap: Promise<StudioUser | null> | null = null;
+
+/** Resolve the current session once per page load; cached afterwards. */
+export function bootstrapAuth(force = false): Promise<StudioUser | null> {
+  if (force) bootstrap = null;
+  if (!bootstrap) {
+    bootstrap = meFn()
+      .then((user) => {
+        useAuth.setState({ user, hydrated: true });
+        return user;
+      })
+      .catch(() => {
+        useAuth.setState({ user: null, hydrated: true });
+        return null;
+      });
+  }
+  return bootstrap;
 }
 
-
-const RANK: Record<Role, number> = { owner: 4, engineer: 3, assistant: 2, intern: 1 };
-
-export function hasRole(user: StudioUser | null, role: Role) {
-  return user?.role === role;
+export function clearAuthCache() {
+  bootstrap = null;
 }
-
-export function hasAnyRole(user: StudioUser | null, roles: Role[]) {
-  return !!user && roles.includes(user.role);
-}
-
-/** True when the user's role is at least as privileged as `role`. */
-export function atLeast(user: StudioUser | null, role: Role) {
-  return !!user && RANK[user.role] >= RANK[role];
-}
-
-export const DEMO_ACCOUNTS = ROSTER.map((u) => ({ email: u.email, role: u.role, name: u.name }));
