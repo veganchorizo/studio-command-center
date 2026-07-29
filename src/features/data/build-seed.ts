@@ -56,29 +56,29 @@ export type CollectionName = {
   [K in keyof StudioData]: StudioData[K] extends Array<{ id: string }> ? K : never;
 }[keyof StudioData];
 
+/** A blank studio: every collection starts empty, only defaults for settings. */
 export function buildSeed(): StudioData {
-  const equipment = seedEquipment();
   return {
-    sessions: seedSessions(),
-    equipment,
-    tasks: seedTasks(),
-    notes: seedNotes(),
-    invoices: seedInvoices(),
-    conversations: seedConversations(),
-    reminders: seedReminders(equipment),
-    artists: seedArtists(),
-    projects: seedProjects(),
-    clients: seedClients(),
-    tickets: seedMaintenanceTickets(equipment),
-    inventory: seedInventory(),
-    patchPoints: seedPatchPoints(),
-    expenses: seedExpenses(),
-    campaigns: seedCampaigns(),
-    knowledge: seedKnowledge(),
-    training: seedTraining(),
-    threads: seedThreads(),
-    audioArchives: seedAudioArchives(),
-    videoArchives: seedVideoArchives(),
+    sessions: [],
+    equipment: [],
+    tasks: [],
+    notes: [],
+    invoices: [],
+    conversations: [],
+    reminders: [],
+    artists: [],
+    projects: [],
+    clients: [],
+    tickets: [],
+    inventory: [],
+    patchPoints: [],
+    expenses: [],
+    campaigns: [],
+    knowledge: [],
+    training: [],
+    threads: [],
+    audioArchives: [],
+    videoArchives: [],
     settings: { ...DEFAULT_SETTINGS },
   };
 }
