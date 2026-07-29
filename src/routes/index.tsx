@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Radio, ShieldCheck } from "lucide-react";
-import { DEMO_ACCOUNTS, useAuth } from "@/features/auth/store";
+import { bootstrapAuth, useAuth } from "@/features/auth/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
