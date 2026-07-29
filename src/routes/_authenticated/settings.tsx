@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Download, RotateCcw, Upload } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Download, RotateCcw, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, PageHeader, Panel } from "@/components/studio/Panel";
-import { useAuth, atLeast, DEMO_ACCOUNTS } from "@/features/auth/store";
+import { useAuth, atLeast } from "@/features/auth/store";
+import { changeOwnPasswordFn } from "@/features/auth/auth.functions";
 import { exportData, useStudioDb } from "@/features/data/store";
 import { listModels } from "@/features/assistant/ollama";
 
