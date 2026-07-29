@@ -31,6 +31,7 @@ import { Route as AuthenticatedSessionsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedKnowledgeIndexRouteImport } from './routes/_authenticated/knowledge.index'
 import { Route as AuthenticatedEquipmentIndexRouteImport } from './routes/_authenticated/equipment.index'
 import { Route as AuthenticatedAssistantIndexRouteImport } from './routes/_authenticated/assistant.index'
+import { Route as ApiOllamaSplatRouteImport } from './routes/api/ollama/$'
 import { Route as AuthenticatedSessionsSessionIdRouteImport } from './routes/_authenticated/sessions.$sessionId'
 import { Route as AuthenticatedKnowledgeDocIdRouteImport } from './routes/_authenticated/knowledge.$docId'
 import { Route as AuthenticatedEquipmentEquipmentIdRouteImport } from './routes/_authenticated/equipment.$equipmentId'
@@ -150,6 +151,11 @@ const AuthenticatedAssistantIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAssistantRoute,
   } as any)
+const ApiOllamaSplatRoute = ApiOllamaSplatRouteImport.update({
+  id: '/api/ollama/$',
+  path: '/api/ollama/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedSessionsSessionIdRoute =
   AuthenticatedSessionsSessionIdRouteImport.update({
     id: '/sessions/$sessionId',
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
   '/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/api/ollama/$': typeof ApiOllamaSplatRoute
   '/assistant/': typeof AuthenticatedAssistantIndexRoute
   '/equipment/': typeof AuthenticatedEquipmentIndexRoute
   '/knowledge/': typeof AuthenticatedKnowledgeIndexRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
   '/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/api/ollama/$': typeof ApiOllamaSplatRoute
   '/assistant': typeof AuthenticatedAssistantIndexRoute
   '/equipment': typeof AuthenticatedEquipmentIndexRoute
   '/knowledge': typeof AuthenticatedKnowledgeIndexRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/_authenticated/equipment/$equipmentId': typeof AuthenticatedEquipmentEquipmentIdRoute
   '/_authenticated/knowledge/$docId': typeof AuthenticatedKnowledgeDocIdRoute
   '/_authenticated/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/api/ollama/$': typeof ApiOllamaSplatRoute
   '/_authenticated/assistant/': typeof AuthenticatedAssistantIndexRoute
   '/_authenticated/equipment/': typeof AuthenticatedEquipmentIndexRoute
   '/_authenticated/knowledge/': typeof AuthenticatedKnowledgeIndexRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/equipment/$equipmentId'
     | '/knowledge/$docId'
     | '/sessions/$sessionId'
+    | '/api/ollama/$'
     | '/assistant/'
     | '/equipment/'
     | '/knowledge/'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/equipment/$equipmentId'
     | '/knowledge/$docId'
     | '/sessions/$sessionId'
+    | '/api/ollama/$'
     | '/assistant'
     | '/equipment'
     | '/knowledge'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/_authenticated/equipment/$equipmentId'
     | '/_authenticated/knowledge/$docId'
     | '/_authenticated/sessions/$sessionId'
+    | '/api/ollama/$'
     | '/_authenticated/assistant/'
     | '/_authenticated/equipment/'
     | '/_authenticated/knowledge/'
@@ -342,6 +354,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  ApiOllamaSplatRoute: typeof ApiOllamaSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -500,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssistantIndexRouteImport
       parentRoute: typeof AuthenticatedAssistantRoute
     }
+    '/api/ollama/$': {
+      id: '/api/ollama/$'
+      path: '/api/ollama/$'
+      fullPath: '/api/ollama/$'
+      preLoaderRoute: typeof ApiOllamaSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/sessions/$sessionId': {
       id: '/_authenticated/sessions/$sessionId'
       path: '/sessions/$sessionId'
@@ -617,7 +637,18 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  ApiOllamaSplatRoute: ApiOllamaSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
