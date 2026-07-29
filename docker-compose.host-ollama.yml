@@ -1,0 +1,13 @@
+# Use this instead of docker-compose.yml when Ollama runs directly on the host
+# (not in Docker):  docker compose -f docker-compose.host-ollama.yml up -d
+services:
+  studio-os:
+    image: ${STUDIO_OS_IMAGE:-ghcr.io/OWNER/REPO:latest}
+    container_name: studio-os
+    ports:
+      - "${STUDIO_OS_PORT:-8080}:3000"
+    environment:
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
