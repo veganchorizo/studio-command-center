@@ -1,12 +1,12 @@
 services:
   studio-os:
-    image: ${STUDIO_OS_IMAGE:-ghcr.io/OWNER/REPO:latest}
+    image: ${STUDIO_OS_IMAGE:-ghcr.io/veganchorizo/studio-command-center:latest}
     container_name: studio-os
     ports:
       - "${STUDIO_OS_PORT:-8080}:3000"
     environment:
       # Points at YOUR existing Ollama container on the shared network below.
-      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
     restart: unless-stopped
     networks:
       - ollama-net
