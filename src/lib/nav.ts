@@ -1,4 +1,5 @@
 import {
+  Archive,
   Boxes,
   Bot,
   CalendarDays,
@@ -41,6 +42,7 @@ export const NAV_MODULES: NavModule[] = [
   { to: "/equipment", label: "Equipment", icon: SlidersHorizontal, code: "EQP", group: "assets", built: true, key: "e" },
   { to: "/maintenance", label: "Maintenance", icon: Wrench, code: "MNT", built: true, group: "assets" },
   { to: "/patchbay", label: "Patchbay", icon: Cable, code: "PTC", built: true, group: "assets" },
+  { to: "/archive", label: "Archive", icon: Archive, code: "ARC", built: true, group: "assets" },
   { to: "/inventory", label: "Inventory", icon: Boxes, code: "INV", built: true, group: "assets" },
   { to: "/clients", label: "Clients", icon: Users, code: "CLI", built: true, group: "business", roles: ["owner", "engineer"] },
   { to: "/tasks", label: "Tasks", icon: KanbanSquare, code: "TSK", built: true, group: "operations" },
