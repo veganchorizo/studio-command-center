@@ -4,17 +4,58 @@ An offline-first operating system for recording studios: sessions, artists, equi
 patchbay, maintenance, inventory, CRM, marketing, finance, calendar, tasks, training,
 archive, and a local AI assistant backed by your own Ollama daemon.
 
-Built with TanStack Start, TypeScript, React, and Tailwind CSS. All studio data lives in
-the browser (`localStorage`) — nothing leaves the machine.
+Built with TanStack Start, TypeScript, React, and Tailwind CSS. Accounts and every studio
+record are stored on the server inside the container's `/data` volume — shared by every
+machine that reaches it, and never sent anywhere else.
 
 ## Run with Docker
 
 ```sh
-cp .env.example .env    # set STUDIO_OS_IMAGE, OLLAMA_NETWORK, OLLAMA_URL
+cp .env.example .env    # set STUDIO_OS_IMAGE, OLLAMA_NETWORK, OLLAMA_URL, STUDIO_ADMIN_*
 docker compose up -d
 ```
 
 Then open <http://localhost:8080>.
+
+### Accounts and roles
+
+Accounts live server-side in `/data/users.json` (passphrases are salted and
+scrypt-hashed; sessions are encrypted HTTP-only cookies), so everyone signs in with the
+same roster from any machine on your network.
+
+On the very first start, one owner account is created from `STUDIO_ADMIN_EMAIL` and
+`STUDIO_ADMIN_PASSWORD`. Leave the password blank and a random one is generated and
+printed to the logs:
+
+```sh
+docker compose logs studio-os | grep studio-os
+```
+
+Sign in as that owner and open **Users** in the sidebar to create everyone else and
+assign roles:
+
+| Role | Can do |
+| --- | --- |
+| `owner` | Everything, including accounts, finance and data import/reset |
+| `engineer` | Sessions, clients, campaigns, training, settings |
+| `assistant` | Sessions, equipment, archive, inventory, tickets |
+| `intern` | Read-only across the studio, plus tasks and notes |
+
+Anyone can change their own passphrase under **Settings → Accounts**.
+
+### Data storage and backups
+
+The shared database is `/data/studio.json` on the `studio-data` volume, written
+atomically on every change. Back it up with:
+
+```sh
+docker run --rm -v studio-data:/data -v "$PWD":/backup alpine \
+  tar czf /backup/studio-backup.tgz -C /data .
+```
+
+**Settings → Data** also offers a JSON export, plus owner-only import and reset which
+overwrite the shared database for everyone.
+
 
 ### Pointing at your existing Ollama
 
