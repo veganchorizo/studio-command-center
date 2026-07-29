@@ -1,42 +1,57 @@
-## Archive Module (ARC)
+## Goal
 
-A new "Archive" section for logging Audio sessions and Video shows. Starts empty; you populate it manually or via CSV import.
+`docker compose up` pulls a prebuilt image from GHCR and the Studio OS runs at `http://localhost:8080`, talking to the **Ollama container you already run on that server** — no second Ollama, no cloud services.
 
-### Layout
+## Tying into your existing Ollama
 
-One page at `/archive` with two tabs:
+Today the AI Assistant calls Ollama **from the browser** using a URL saved in Settings (`localStorage`), which means it needs `OLLAMA_ORIGINS="*"` and a host-reachable port. In a container setup that's fragile, so the plan adds a **server-side proxy**:
 
-- **Audio Sessions** — Title, Artist, Primary Drive, Archive Drive, Date, Format, Notes
-- **Video Shows** — Title, Media Type, Show Date, Primary Drive, Archive Drive, Notes
+- New server route `src/routes/api/ollama/$.ts` that forwards `GET/POST` to `process.env.OLLAMA_URL` (default `http://ollama:11434`), streaming responses through unchanged.
+- `src/features/assistant/ollama.ts` default base URL becomes `/api/ollama`; the Settings field stays, so you can still point directly at a host URL if you prefer.
+- Result: no CORS config needed on your Ollama, the target is set by an env var at runtime (not baked into the image), and the browser never needs direct network access to Ollama.
 
-Media Type options come from your CSV (Video - Show, Misc. Video, Video - Sessions LIVE, Video - Project, Video - Concert, Video - Concert Stream, Video - Blue Rock aLIVE!, Video - Studio Session, DVD Project, Motion File, Pictures, Misc).
+Compose joins your existing Ollama's network instead of creating one:
 
-### Table behaviour
+```yaml
+services:
+  studio-os:
+    image: ghcr.io/<owner>/<repo>:latest
+    ports: ["8080:3000"]
+    environment:
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+    restart: unless-stopped
+    networks: [ollama-net]
 
-- Keyword search across every field
-- Click any column header to sort ascending / descending (toggle, with an arrow indicator)
-- Dropdown filters for media type and drives
-- Click a row to open the detail sheet; edit and delete from there or via the row pencil
+networks:
+  ollama-net:
+    external: true
+    name: ${OLLAMA_NETWORK:-ollama_default}
+```
 
-### CSV import / export
+A committed `.env.example` documents the three knobs:
+- `OLLAMA_NETWORK` — the Docker network your Ollama container is already on (`docker network ls` to find it).
+- `OLLAMA_URL` — `http://<ollama-container-name>:11434`.
+- Alternative if Ollama runs on the host rather than in Docker: drop the external network and use `OLLAMA_URL=http://host.docker.internal:11434` with `extra_hosts: ["host.docker.internal:host-gateway"]` (both variants documented).
 
-A toolbar above each tab with three actions:
+## The rest of the Dockerization
 
-- **Download template** — empty CSV with just the header row for that tab
-- **Import CSV** — file picker, parses rows, shows a confirm dialog with row count and any skipped/invalid lines, then appends to the current tab. Matches your existing export headers, so your two uploaded files import as-is.
-- **Export CSV** — downloads the current (filtered) tab as CSV
+### 1. Build for a Node server
+The project currently builds for a Cloudflare/edge target, which can't run in a plain container. Switch the nitro preset to `node-server` in `vite.config.ts`, add a `start` script running `node .output/server/index.mjs`.
 
-Import is additive by default, with a checkbox to replace the tab's contents instead.
+### 2. `Dockerfile` (multi-stage)
+- `builder`: `oven/bun`, install with frozen lockfile, `bun run build`.
+- `runner`: `node:22-alpine`, non-root user, copy only `.output/`, `ENV PORT=3000 HOST=0.0.0.0`, `EXPOSE 3000`, `CMD ["node", ".output/server/index.mjs"]`.
+- `.dockerignore` for `node_modules`, `.output`, `.git`, `.lovable`, logs.
 
-### Wiring
+### 3. GitHub Actions → GHCR
+`.github/workflows/docker-publish.yml`: build and push on pushes to main and on tags, `linux/amd64` + `linux/arm64`, auth via the built-in `GITHUB_TOKEN`, tags `latest` + SHA + semver. Public image so `compose up` needs no login.
 
-- New sidebar entry under a new "Archive" group (or in Assets — say if you prefer that), code `ARC`
-- Included in the command palette and global search
-- Two new collections in the local store (`audioArchives`, `videoArchives`), persisted to localStorage like everything else, and included in the Settings JSON export/import
+### 4. README
+Quick start, how to find your Ollama network/container name, the host-Ollama fallback, and a note that app data lives in browser `localStorage` (nothing to mount yet).
 
-### Technical notes
-
-- Reuses `CollectionModule` with `hideHeader` for each tab; sortable headers get added to `CollectionModule` as an opt-in prop so other modules are unaffected
-- CSV parse/serialize helpers in `src/lib/csv.ts` (quoted-field aware, no new dependency)
-- New entity types + empty seeds in `src/features/data/entities.ts` / `seed-entities.ts`; store version bumped so existing saved data merges cleanly
-- Route `src/routes/_authenticated/archive.tsx` with its own head metadata
+## Technical notes
+- Only functional code change is the proxy route + default base URL; existing direct-URL behaviour still works via Settings.
+- Streaming must be preserved through the proxy — I'll verify a real token stream, not just a 200.
+- No Postgres/pgvector service: app state is client-side today. Easy to add when a real backend lands.
+- Multi-arch roughly doubles CI time; say the word and I'll drop arm64.

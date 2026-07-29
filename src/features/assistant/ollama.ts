@@ -54,5 +54,9 @@ export async function streamChat(opts: {
 }
 
 export function connectionHint(baseUrl: string) {
+  if (baseUrl.startsWith("/")) {
+    return `Could not reach Ollama through ${baseUrl}. Check that OLLAMA_URL points at your Ollama container and that both containers share a Docker network.`;
+  }
   return `Could not reach Ollama at ${baseUrl}. Start it with OLLAMA_ORIGINS="*" ollama serve so the browser is allowed to connect, then test again from Settings.`;
 }
+
