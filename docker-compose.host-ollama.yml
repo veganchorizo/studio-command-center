@@ -8,6 +8,16 @@ services:
       - "${STUDIO_OS_PORT:-8080}:3000"
     environment:
       OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      STUDIO_ADMIN_EMAIL: ${STUDIO_ADMIN_EMAIL:-admin@studio.local}
+      STUDIO_ADMIN_PASSWORD: ${STUDIO_ADMIN_PASSWORD:-}
+      STUDIO_ADMIN_NAME: ${STUDIO_ADMIN_NAME:-Studio Owner}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      STUDIO_SECURE_COOKIES: ${STUDIO_SECURE_COOKIES:-false}
+    volumes:
+      - studio-data:/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+
+volumes:
+  studio-data:
