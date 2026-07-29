@@ -27,6 +27,9 @@ export const useAuth = create<AuthState>()((set) => ({
       const result = await signInFn({ data: { email, password } });
       if (!result.ok) return { ok: false as const, error: result.error };
       set({ user: result.user, hydrated: true });
+      // Route guards read the cached session promise — refresh it now, or the
+      // very next navigation sees the pre-sign-in `null` and bounces back.
+      setCachedSession(result.user);
       return { ok: true as const };
     } catch (err) {
       return {
@@ -40,6 +43,7 @@ export const useAuth = create<AuthState>()((set) => ({
       await signOutFn();
     } finally {
       set({ user: null, hydrated: true });
+      setCachedSession(null);
     }
   },
 }));
@@ -61,6 +65,12 @@ export function bootstrapAuth(force = false): Promise<StudioUser | null> {
       });
   }
   return bootstrap;
+}
+
+/** Seed the guard cache after a sign-in/out without another round trip. */
+export function setCachedSession(user: StudioUser | null) {
+  bootstrap = Promise.resolve(user);
+  useAuth.setState({ user, hydrated: true });
 }
 
 export function clearAuthCache() {
