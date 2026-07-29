@@ -52,6 +52,7 @@ export const NAV_MODULES: NavModule[] = [
   { to: "/marketing", label: "Marketing", icon: Megaphone, code: "MKT", built: true, group: "business", roles: ["owner", "engineer"] },
   { to: "/finance", label: "Finance", icon: CircleDollarSign, code: "FIN", built: true, group: "business", roles: ["owner"] },
   { to: "/training", label: "Intern Training", icon: GraduationCap, code: "TRN", built: true, group: "intelligence" },
+  { to: "/users", label: "Users", icon: UserCog, code: "USR", built: true, group: "system", roles: ["owner"] },
   { to: "/settings", label: "Settings", icon: Settings, code: "SYS", built: true, group: "system", roles: ["owner", "engineer"] },
 ];
 
