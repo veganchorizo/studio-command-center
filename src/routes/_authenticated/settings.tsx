@@ -34,6 +34,7 @@ function SettingsPage() {
   const importData = useStudioDb((s) => s.importData);
   const user = useAuth((s) => s.user);
   const canWrite = atLeast(user, "engineer");
+  const isOwner = atLeast(user, "owner");
   const fileRef = useRef<HTMLInputElement>(null);
   const [probe, setProbe] = useState<string | null>(null);
   const [probing, setProbing] = useState(false);
