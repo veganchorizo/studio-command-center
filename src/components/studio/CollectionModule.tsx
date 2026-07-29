@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,10 @@ export type CollectionModuleProps = {
   summary?: ReactNode;
   /** Skip the page header when the module is embedded in a larger page. */
   hideHeader?: boolean;
+  /** Allow clicking table headers to sort ascending / descending. */
+  sortable?: boolean;
+  /** Extra actions rendered in the table toolbar (import/export etc.). */
+  toolbar?: ReactNode;
   defaults?: Record<string, unknown>;
   sort?: (a: Record<string, unknown>, b: Record<string, unknown>) => number;
 };
@@ -107,6 +111,8 @@ export function CollectionModule(props: CollectionModuleProps) {
     summary,
     defaults,
     sort,
+    sortable,
+    toolbar,
   } = props;
 
   const rows = useStudioDb((s) => s[collection]) as unknown as Array<Record<string, unknown>>;
@@ -119,6 +125,7 @@ export function CollectionModule(props: CollectionModuleProps) {
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
   const [detailRow, setDetailRow] = useState<Record<string, unknown> | null>(null);
+  const [sortBy, setSortBy] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
 
   const filterFields = fields.filter((f) => f.filter && f.options?.length);
   const tableFields = fields.filter((f) => f.table !== false).slice(0, 7);
@@ -134,8 +141,23 @@ export function CollectionModule(props: CollectionModuleProps) {
       const hay = [String(row.id ?? ""), ...keys.map((k) => String(row[k] ?? ""))].join(" ").toLowerCase();
       return hay.includes(needle);
     });
+    if (sortBy) {
+      const dir = sortBy.dir === "asc" ? 1 : -1;
+      return [...out].sort((a, b) => {
+        const av = a[sortBy.key];
+        const bv = b[sortBy.key];
+        if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
+        return String(av ?? "").localeCompare(String(bv ?? ""), undefined, { numeric: true }) * dir;
+      });
+    }
     return sort ? [...out].sort(sort) : out;
-  }, [rows, filters, q, keys, sort]);
+  }, [rows, filters, q, keys, sort, sortBy]);
+
+  function toggleSort(key: string) {
+    setSortBy((s) =>
+      !s || s.key !== key ? { key, dir: "asc" } : s.dir === "asc" ? { key, dir: "desc" } : null,
+    );
+  }
 
   function openNew() {
     const blank: Record<string, unknown> = { id: newId(idPrefix) };
@@ -222,6 +244,7 @@ export function CollectionModule(props: CollectionModuleProps) {
               </SelectContent>
             </Select>
           ))}
+          {toolbar}
         </div>
 
         {visible.length === 0 ? (
@@ -231,11 +254,21 @@ export function CollectionModule(props: CollectionModuleProps) {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="label-console px-3 py-2">ID</th>
+                  <th className="label-console px-3 py-2">
+                    {sortable ? <SortHeader label="ID" active={sortBy?.key === "id" ? sortBy.dir : null} onClick={() => toggleSort("id")} /> : "ID"}
+                  </th>
                   {tone && <th className="label-console px-3 py-2">State</th>}
                   {tableFields.map((f) => (
                     <th key={f.key} className="label-console px-3 py-2 whitespace-nowrap">
-                      {f.label}
+                      {sortable ? (
+                        <SortHeader
+                          label={f.label}
+                          active={sortBy?.key === f.key ? sortBy.dir : null}
+                          onClick={() => toggleSort(f.key)}
+                        />
+                      ) : (
+                        f.label
+                      )}
                     </th>
                   ))}
                   <th className="w-16 px-3 py-2" />
@@ -340,6 +373,31 @@ export function CollectionModule(props: CollectionModuleProps) {
         onSave={save}
       />
     </div>
+  );
+}
+
+function SortHeader({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: "asc" | "desc" | null;
+  onClick: () => void;
+}) {
+  const Icon = active === "asc" ? ChevronUp : active === "desc" ? ChevronDown : ChevronsUpDown;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "label-console inline-flex items-center gap-1 hover:text-foreground",
+        active ? "text-foreground" : "",
+      )}
+    >
+      {label}
+      <Icon className={cn("size-3", active ? "text-primary" : "opacity-40")} />
+    </button>
   );
 }
 

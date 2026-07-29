@@ -12,6 +12,8 @@ import type {
 import type {
   Artist,
   AssistantThread,
+  AudioArchive,
+  VideoArchive,
   Campaign,
   Client,
   Expense,
@@ -35,6 +37,8 @@ import {
 import {
   DEFAULT_SETTINGS,
   seedArtists,
+  seedAudioArchives,
+  seedVideoArchives,
   seedCampaigns,
   seedClients,
   seedExpenses,
@@ -74,6 +78,8 @@ export type StudioData = {
   knowledge: KnowledgeDoc[];
   training: TrainingModule[];
   threads: AssistantThread[];
+  audioArchives: AudioArchive[];
+  videoArchives: VideoArchive[];
   settings: StudioSettings;
 };
 
@@ -105,6 +111,8 @@ export function buildSeed(): StudioData {
     knowledge: seedKnowledge(),
     training: seedTraining(),
     threads: seedThreads(),
+    audioArchives: seedAudioArchives(),
+    videoArchives: seedVideoArchives(),
     settings: { ...DEFAULT_SETTINGS },
   };
 }
@@ -124,7 +132,7 @@ type StudioDb = StudioData & {
   importData: (data: Partial<StudioData>) => void;
 };
 
-const STORAGE_KEY = "studio-os/db/v1";
+const STORAGE_KEY = "studio-os/db/v2";
 
 export const useStudioDb = create<StudioDb>()(
   persist(
@@ -166,7 +174,7 @@ export const useStudioDb = create<StudioDb>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => {
         const { hydrated: _h, upsert: _u, remove: _r, ...rest } = s as unknown as Record<string, unknown>;
