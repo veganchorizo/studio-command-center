@@ -110,12 +110,7 @@ function SignIn() {
             <ShieldCheck className="size-3" /> Accounts live on this server
           </div>
           <p className="text-[0.65rem] leading-relaxed text-muted-foreground/70">
-            Credentials are verified on the studio server and shared by every machine that reaches
-            it. The first owner account is created on first start from{" "}
-            <span className="readout">STUDIO_ADMIN_EMAIL</span> /{" "}
-            <span className="readout">STUDIO_ADMIN_PASSWORD</span> — if you did not set them, the
-            generated passphrase is printed in the container logs. Owners can add everyone else
-            under Users.
+            {"\n"}
           </p>
         </div>
       </div>
