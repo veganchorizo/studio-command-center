@@ -15,6 +15,7 @@ import {
   Settings,
   SlidersHorizontal,
   Users,
+  UserCog,
   Wrench,
   FolderOpen,
 } from "lucide-react";
