@@ -42,7 +42,8 @@ export function TopBar() {
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    signOut();
+    await signOut();
+    clearAuthCache();
     navigate({ to: "/", replace: true });
   }
 
