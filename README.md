@@ -104,3 +104,19 @@ Production build and run:
 NITRO_PRESET=node-server bun run build
 bun run start
 ```
+
+## Environment variables
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `OLLAMA_URL` | `http://ollama:11434` | Where the server proxies `/api/ollama/*` |
+| `STUDIO_DATA_DIR` | `/data` | Folder holding accounts + the studio database |
+| `STUDIO_ADMIN_EMAIL` | `admin@studio.local` | First-run owner account email |
+| `STUDIO_ADMIN_PASSWORD` | random (logged) | First-run owner passphrase |
+| `STUDIO_ADMIN_NAME` | `Studio Owner` | First-run owner display name |
+| `SESSION_SECRET` | generated into `/data` | Encrypts session cookies |
+| `STUDIO_SECURE_COOKIES` | `false` | Set `true` when serving over HTTPS |
+| `PORT` / `HOST` | `3000` / `0.0.0.0` | Server bind address |
+
+`STUDIO_ADMIN_*` only matter on the very first start; afterwards the roster is managed
+in the app.
