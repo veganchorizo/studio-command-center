@@ -39,6 +39,7 @@ function StudioShell() {
       <AppSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
+        <LocalImportBanner />
         {error && (
           <div className="border-b border-destructive/40 bg-destructive/10 px-4 py-1.5 text-[0.65rem] text-destructive">
             Studio server unreachable — {error}. Changes may not be saved.
