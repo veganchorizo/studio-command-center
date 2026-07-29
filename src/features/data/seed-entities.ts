@@ -2,6 +2,8 @@ import type { Equipment } from "./types";
 import type {
   Artist,
   AssistantThread,
+  AudioArchive,
+  VideoArchive,
   Campaign,
   Client,
   Expense,
