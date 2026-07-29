@@ -23,31 +23,7 @@ import type {
   StudioSettings,
   TrainingModule,
 } from "./entities";
-import {
-  seedConversations,
-  seedEquipment,
-  seedInvoices,
-  seedNotes,
-  seedReminders,
-  seedSessions,
-  seedTasks,
-} from "./seed";
-import {
-  DEFAULT_SETTINGS,
-  seedArtists,
-  seedAudioArchives,
-  seedVideoArchives,
-  seedCampaigns,
-  seedClients,
-  seedExpenses,
-  seedInventory,
-  seedKnowledge,
-  seedMaintenanceTickets,
-  seedPatchPoints,
-  seedProjects,
-  seedThreads,
-  seedTraining,
-} from "./seed-entities";
+import { DEFAULT_SETTINGS } from "./seed-entities";
 import type { Role } from "@/features/auth/roles";
 
 /** The whole studio document. Lives server-side in `/data/studio.json`. */
