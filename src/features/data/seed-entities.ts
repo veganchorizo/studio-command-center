@@ -372,7 +372,10 @@ export const DEFAULT_SETTINGS: StudioSettings = {
   studioName: "The Foundry",
   location: "London, UK",
   hourlyRate: 65,
-  ollamaUrl: "http://localhost:11434",
+  // Same-origin proxy to the operator's Ollama daemon (target set by OLLAMA_URL
+  // on the server). Can be replaced with a direct URL like http://localhost:11434.
+  ollamaUrl: "/api/ollama",
+
   ollamaModel: "llama3.1",
   retrievalDepth: 6,
 };

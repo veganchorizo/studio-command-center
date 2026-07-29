@@ -161,9 +161,12 @@ function SettingsPage() {
               {probe && <span className="readout text-[0.6rem] text-muted-foreground">{probe}</span>}
             </div>
             <p className="text-[0.65rem] leading-relaxed text-muted-foreground">
-              Ollama must allow this origin: run <span className="readout">OLLAMA_ORIGINS=&quot;*&quot; ollama serve</span> on the
-              studio machine.
+              <span className="readout">/api/ollama</span> proxies through this server to the daemon set by the{" "}
+              <span className="readout">OLLAMA_URL</span> environment variable — no CORS setup needed. To hit Ollama
+              directly from the browser instead, enter a full URL and run{" "}
+              <span className="readout">OLLAMA_ORIGINS=&quot;*&quot; ollama serve</span>.
             </p>
+
           </div>
         </Panel>
 
